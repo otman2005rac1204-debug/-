@@ -1,0 +1,7 @@
+{
+  "name": "AI Project Generator",
+  "description": "An AI-powered application that generates complete, functional code for web projects based on a user's description. Describe your project idea, and the AI will write the HTML, CSS, and JavaScript files for you.",
+  "requestFramePermissions": [
+    "microphone"
+  ]
+}
