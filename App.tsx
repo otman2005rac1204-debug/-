@@ -4,11 +4,12 @@ import { generateProjectCode, refineProjectCode, generateCiCdWorkflow } from './
 import { useLocalStorage } from './hooks/useLocalStorage';
 import ProjectInputPanel from './components/ProjectInputPanel';
 import ProjectDisplay from './components/ProjectDisplay';
-import { HeaderIcon, ApiKeyIcon, KeyIcon, TrashIcon, PlusIcon, MicrophoneIcon, UploadIcon } from './components/icons';
+import { HeaderIcon, ApiKeyIcon, KeyIcon, TrashIcon, PlusIcon, MicrophoneIcon, UploadIcon, GitHubIcon } from './components/icons';
 import FreeApiModal from './components/FreeApiModal';
 import VoiceChatModal from './components/VoiceChatModal';
 import PublishProjectModal from './components/DeveloperProfileModal';
 import ThemeToggle from './components/ThemeToggle';
+import GitHubPublishModal from './components/GitHubPublishModal';
 
 
 declare var JSZip: any;
@@ -33,6 +34,7 @@ const App: React.FC = () => {
   const [isGeneratingCiCd, setIsGeneratingCiCd] = useState<boolean>(false);
   const [isVoiceChatOpen, setIsVoiceChatOpen] = useState<boolean>(false);
   const [isPublishModalOpen, setIsPublishModalOpen] = useState<boolean>(false);
+  const [isGitHubModalOpen, setIsGitHubModalOpen] = useState<boolean>(false);
   const [isCurrentApiKeyInvalid, setIsCurrentApiKeyInvalid] = useState<boolean>(false);
   
   const apiKeyManagerRef = useRef<HTMLDivElement>(null);
@@ -276,6 +278,15 @@ const App: React.FC = () => {
                   <MicrophoneIcon />
                   <span className="hidden sm:inline">مساعد AI</span>
                 </button>
+                 <button 
+                  onClick={() => setIsGitHubModalOpen(true)}
+                  disabled={!currentProject}
+                  className="flex items-center gap-2 text-sm bg-slate-800 hover:bg-slate-900 text-white dark:bg-[#24292e] dark:hover:bg-[#343a40] font-semibold py-2 px-4 rounded-lg transition-colors disabled:bg-slate-400 dark:disabled:bg-slate-800 disabled:text-slate-600 dark:disabled:text-slate-500 disabled:cursor-not-allowed"
+                  title={!currentProject ? "قم بإنشاء مشروع أولاً" : "دفع المشروع إلى GitHub"}
+                >
+                  <GitHubIcon />
+                  <span className="hidden sm:inline">دفع إلى GitHub</span>
+                </button>
                 <button 
                   onClick={() => setIsPublishModalOpen(true)}
                   disabled={!currentProject}
@@ -428,6 +439,7 @@ const App: React.FC = () => {
       <FreeApiModal isOpen={isApiModalOpen} onClose={() => setIsApiModalOpen(false)} />
       {activeApiKey && <VoiceChatModal isOpen={isVoiceChatOpen} onClose={() => setIsVoiceChatOpen(false)} apiKey={activeApiKey.key} />}
       <PublishProjectModal isOpen={isPublishModalOpen} onClose={() => setIsPublishModalOpen(false)} project={currentProject} />
+      <GitHubPublishModal isOpen={isGitHubModalOpen} onClose={() => setIsGitHubModalOpen(false)} project={currentProject} />
     </div>
   );
 };

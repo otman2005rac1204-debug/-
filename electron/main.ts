@@ -1,3 +1,6 @@
+// FIX: Add a triple-slash directive to include Node.js types, resolving errors for `__dirname` and `process` globals.
+/// <reference types="node" />
+
 import { app, BrowserWindow } from 'electron'
 import path from 'node:path'
 

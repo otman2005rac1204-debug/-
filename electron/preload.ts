@@ -1,3 +1,6 @@
+// FIX: Add a triple-slash directive to include Node.js types, resolving an error for the `process.versions` property.
+/// <reference types="node" />
+
 // preload.ts
 // All the Node.js APIs are available in the preload process.
 // It has the same sandbox as a Chrome extension.
