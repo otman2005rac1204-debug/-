@@ -14,6 +14,7 @@ interface ProjectInputPanelProps {
   onDeleteProject: (projectId: string) => void;
   currentProjectId?: string | null;
   isApiKeySet: boolean;
+  onOpenLocalProject: () => void;
 }
 
 const PROJECT_TYPES = [
@@ -38,6 +39,7 @@ const ProjectInputPanel: React.FC<ProjectInputPanelProps> = ({
   onDeleteProject,
   currentProjectId,
   isApiKeySet,
+  onOpenLocalProject
 }) => {
   const isGenerateDisabled = isLoading || !userInput.trim() || !isApiKeySet;
 
@@ -102,6 +104,20 @@ const ProjectInputPanel: React.FC<ProjectInputPanelProps> = ({
             </div>
         )}
       </div>
+
+       <div className="flex items-center gap-2">
+            <hr className="flex-grow border-slate-200 dark:border-slate-700"/>
+            <span className="text-slate-400 dark:text-slate-500 text-sm">أو</span>
+            <hr className="flex-grow border-slate-200 dark:border-slate-700"/>
+       </div>
+
+        <button
+          onClick={onOpenLocalProject}
+          disabled={isLoading}
+          className="w-full flex items-center justify-center gap-2 bg-slate-200 hover:bg-slate-300 border border-slate-300/80 text-slate-700 dark:bg-slate-700/50 dark:hover:bg-slate-700 dark:border-slate-600/80 dark:text-sky-300 font-semibold py-2.5 px-4 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          فتح مشروع محلي
+        </button>
 
 
       <div className="border-t border-slate-200 dark:border-slate-700 pt-4 mt-2">

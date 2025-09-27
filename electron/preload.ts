@@ -1,16 +1,9 @@
-// Fix: Add a triple-slash directive to include Node.js types, resolving an error for the `process.versions` property.
-/// <reference types="node" />
+import { contextBridge, ipcRenderer } from 'electron';
 
-// preload.ts
-// All the Node.js APIs are available in the preload process.
-// It has the same sandbox as a Chrome extension.
-window.addEventListener('DOMContentLoaded', () => {
-  const replaceText = (selector: string, text: string) => {
-    const element = document.getElementById(selector)
-    if (element) element.innerText = text
-  }
-
-  for (const dependency of ['chrome', 'node', 'electron']) {
-    replaceText(`${dependency}-version`, process.versions[dependency] || 'N/A')
-  }
-})
+// Expose protected methods that allow the renderer process to use
+// Node.js APIs safely.
+contextBridge.exposeInMainWorld('fsApi', {
+  openDirectory: () => ipcRenderer.invoke('dialog:openDirectory'),
+  readDirectory: (path) => ipcRenderer.invoke('fs:readDirectory', path),
+  saveFiles: (projectPath, files) => ipcRenderer.invoke('fs:saveFiles', projectPath, files),
+});

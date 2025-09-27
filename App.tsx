@@ -86,10 +86,65 @@ const App: React.FC = () => {
       setIsLoading(false);
     }
   }, [userInput, projectType, activeApiKey]);
+
+  const handleOpenLocalProject = useCallback(async () => {
+    if (!window.fsApi) {
+      setError("File system access is not available in this environment.");
+      return;
+    }
+    setError(null);
+    setIsLoading(true);
+    try {
+      const projectPath = await window.fsApi.openDirectory();
+      if (projectPath) {
+        const files = await window.fsApi.readDirectory(projectPath);
+        if (files.length === 0) {
+          setError("لم يتم العثور على ملفات نصية قابلة للتحرير في المجلد المحدد.");
+          setCurrentProject(null);
+          return;
+        }
+        
+        const projectName = projectPath.split(/[/\\]/).pop() || 'Local Project';
+        
+        const newProject: CodeProject = {
+          id: `local-${projectPath}`,
+          projectName,
+          description: `مشروع محلي تم تحميله من: ${projectPath}`,
+          files,
+          originalPrompt: '',
+          language: 'Local', // Or try to detect
+          localProjectPath: projectPath,
+        };
+        setCurrentProject(newProject);
+        setRefinementInput('');
+      }
+    } catch (err: any) {
+      console.error("Failed to open local project:", err);
+      setError(`فشل في فتح المشروع المحلي: ${err.message}`);
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
   
-  const handleSaveProject = useCallback(() => {
+  const handleSaveProject = useCallback(async () => {
     if (!currentProject) return;
 
+    // Handle saving local projects to disk
+    if (currentProject.localProjectPath) {
+      if (!window.fsApi) {
+        setError("File system access is not available to save.");
+        return;
+      }
+      try {
+        await window.fsApi.saveFiles(currentProject.localProjectPath, currentProject.files);
+        // Maybe add a temporary success message
+      } catch (err: any) {
+        setError(`فشل حفظ الملفات على القرص: ${err.message}`);
+      }
+      return;
+    }
+
+    // Handle saving generated projects to local storage
     if (!savedProjects.some(p => p.id === currentProject.id)) {
         setSavedProjects([currentProject, ...savedProjects]);
     } else {
@@ -119,6 +174,14 @@ const App: React.FC = () => {
     setCurrentProject({ ...currentProject, files: updatedFiles });
   }, [currentProject]);
 
+  const handleProjectMetaChange = useCallback((field: 'projectName' | 'description', value: string) => {
+    if (!currentProject) return;
+    setCurrentProject({
+      ...currentProject,
+      [field]: value
+    });
+  }, [currentProject]);
+
   const handleRefine = useCallback(async () => {
     if (!activeApiKey) {
         setError('الرجاء تحديد مفتاح API نشط أولاً.');
@@ -135,8 +198,8 @@ const App: React.FC = () => {
     setIsCurrentApiKeyInvalid(false);
 
     try {
-        const { id, originalPrompt, ...projectData } = currentProject;
-        const refinedProjectCode = await refineProjectCode(originalPrompt, projectData, refinementInput, currentProject.language, activeApiKey.key);
+        const { id, originalPrompt, localProjectPath, ...projectData } = currentProject;
+        const refinedProjectCode = await refineProjectCode(originalPrompt || `A local project: ${currentProject.projectName}`, projectData, refinementInput, currentProject.language, activeApiKey.key);
         
         setCurrentProject({ ...currentProject, ...refinedProjectCode });
 
@@ -289,9 +352,9 @@ const App: React.FC = () => {
                 </button>
                 <button 
                   onClick={() => setIsPublishModalOpen(true)}
-                  disabled={!currentProject}
+                  disabled={!currentProject || !!currentProject.localProjectPath}
                   className="flex items-center gap-2 text-sm bg-slate-200 hover:bg-slate-300 border border-slate-300/80 text-slate-700 dark:bg-slate-700/50 dark:hover:bg-slate-700 dark:border-slate-600/80 dark:text-sky-300 font-semibold py-2 px-4 rounded-lg transition-colors disabled:bg-slate-200 dark:disabled:bg-slate-800 disabled:border-slate-300 dark:disabled:border-slate-700 disabled:text-slate-500 dark:disabled:text-slate-500 disabled:cursor-not-allowed"
-                  title={!currentProject ? "قم بإنشاء مشروع أولاً" : "نشر المشروع على GoFile"}
+                  title={!currentProject ? "قم بإنشاء مشروع أولاً" : (currentProject?.localProjectPath ? "لا يمكن نشر المشاريع المحلية" : "نشر المشروع على GoFile")}
                 >
                   <UploadIcon />
                   <span className="hidden sm:inline">نشر المشروع</span>
@@ -412,6 +475,7 @@ const App: React.FC = () => {
               onDeleteProject={handleDeleteProject}
               currentProjectId={currentProject?.id}
               isApiKeySet={!!activeApiKey}
+              onOpenLocalProject={handleOpenLocalProject}
             />
           </div>
           <div className="lg:col-span-2">
@@ -429,6 +493,7 @@ const App: React.FC = () => {
               setRefinementInput={setRefinementInput}
               onGenerateCiCd={handleGenerateCiCd}
               isGeneratingCiCd={isGeneratingCiCd}
+              onProjectMetaChange={handleProjectMetaChange}
             />
           </div>
         </div>

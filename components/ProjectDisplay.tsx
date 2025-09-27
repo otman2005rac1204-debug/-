@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { CodeProject } from '../types';
-import { SaveIcon, DownloadIcon, FileCodeIcon, CopyIcon, PreviewIcon, RefineIcon, CiCdIcon } from './icons';
+import { SaveIcon, DownloadIcon, FileCodeIcon, CopyIcon, PreviewIcon, RefineIcon, CiCdIcon, BackArrowIcon } from './icons';
 
 declare var hljs: any;
 
@@ -23,29 +23,35 @@ interface ProjectDisplayProps {
   setRefinementInput: (value: string) => void;
   onGenerateCiCd: () => void;
   isGeneratingCiCd: boolean;
+  onProjectMetaChange: (field: 'projectName' | 'description', value: string) => void;
 }
 
 const ProjectDisplay: React.FC<ProjectDisplayProps> = ({ 
   project, isLoading, error, onSave, isSaved, onDownloadZip, onCodeChange,
   onRefine, isRefining, refinementInput, setRefinementInput,
-  onGenerateCiCd, isGeneratingCiCd
+  onGenerateCiCd, isGeneratingCiCd, onProjectMetaChange
 }) => {
   const [activeFileName, setActiveFileName] = useState<string | null>(null);
   const [copySuccess, setCopySuccess] = useState('');
   const [previewSrcDoc, setPreviewSrcDoc] = useState('');
+  const [isPreviewMode, setIsPreviewMode] = useState<boolean>(false);
   const codeEditorRef = useRef<HTMLTextAreaElement>(null);
   const lineNumbersRef = useRef<HTMLDivElement>(null);
   const preRef = useRef<HTMLPreElement>(null);
   
   useEffect(() => {
     if (project && project.files.length > 0) {
-      if (!project.files.some(f => f.fileName === activeFileName)) {
+      if (!activeFileName || !project.files.some(f => f.fileName === activeFileName)) {
         setActiveFileName(project.files[0].fileName);
       }
     } else {
       setActiveFileName(null);
     }
   }, [project, activeFileName]);
+  
+  useEffect(() => {
+      setIsPreviewMode(false);
+  }, [project]);
 
   useEffect(() => {
     if (!project || project.language !== 'HTML/CSS/JS') {
@@ -141,8 +147,9 @@ const ProjectDisplay: React.FC<ProjectDisplayProps> = ({
   const activeFile = project.files.find(f => f.fileName === activeFileName);
   const files = project.files || [];
   
-  const showPreview = project.language === 'HTML/CSS/JS';
+  const showPreviewButton = project.language === 'HTML/CSS/JS';
   const ciCdFileExists = project.files.some(f => f.fileName.includes('.github/workflows/'));
+  const isLocalProject = !!project.localProjectPath;
 
   const lineCount = activeFile ? activeFile.code.split('\n').length : 0;
   const highlightedCode = activeFile ? hljs.highlight(activeFile.code, { language: getLanguage(activeFile.fileName), ignoreIllegals: true }).value : '';
@@ -152,18 +159,41 @@ const ProjectDisplay: React.FC<ProjectDisplayProps> = ({
     <div className="bg-white dark:bg-slate-800/50 p-6 md:p-8 rounded-lg shadow-lg">
       <style>{hideScrollbarStyle}</style>
       <div className="flex flex-wrap gap-4 justify-between items-start mb-4">
-        <div>
-          <h2 className="text-3xl font-extrabold text-sky-600 dark:text-sky-400">{project.projectName}</h2>
-          <p className="mt-2 text-slate-600 dark:text-slate-400 max-w-2xl">{project.description} <span className="font-semibold text-xs bg-slate-200 text-sky-800 dark:bg-slate-700 dark:text-sky-300 px-2 py-1 rounded-full ml-2">{project.language}</span></p>
+        <div className="flex-1 min-w-0">
+          {isLocalProject ? (
+            <input
+              type="text"
+              value={project.projectName}
+              onChange={(e) => onProjectMetaChange('projectName', e.target.value)}
+              className="w-full text-3xl font-extrabold text-sky-600 dark:text-sky-400 bg-transparent focus:bg-white dark:focus:bg-slate-900/50 focus:ring-2 focus:ring-sky-500 rounded-md p-1 -m-1 transition-all border-none outline-none"
+              placeholder="Project Name"
+            />
+          ) : (
+            <h2 className="text-3xl font-extrabold text-sky-600 dark:text-sky-400">{project.projectName}</h2>
+          )}
+          <div className="flex items-start gap-2 mt-2">
+            {isLocalProject ? (
+              <textarea
+                value={project.description}
+                onChange={(e) => onProjectMetaChange('description', e.target.value)}
+                rows={2}
+                className="flex-1 text-slate-600 dark:text-slate-400 max-w-2xl bg-transparent focus:bg-white dark:focus:bg-slate-900/50 focus:ring-2 focus:ring-sky-500 rounded-md p-1 -m-1 transition-all border-none outline-none resize-y"
+                placeholder="Project Description"
+              />
+            ) : (
+              <p className="flex-1 text-slate-600 dark:text-slate-400 max-w-2xl">{project.description}</p>
+            )}
+            <span className="font-semibold text-xs bg-slate-200 text-sky-800 dark:bg-slate-700 dark:text-sky-300 px-2 py-1 rounded-full">{project.language}</span>
+          </div>
         </div>
         <div className="flex items-center gap-2 flex-shrink-0">
           <button
             onClick={onSave}
-            disabled={isSaved}
+            disabled={isLocalProject ? false : isSaved}
             className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-500 disabled:bg-slate-400 dark:disabled:bg-slate-600 disabled:cursor-not-allowed text-white font-bold py-2 px-4 rounded-lg transition-all shadow-md"
           >
             <SaveIcon />
-            {isSaved ? 'تم الحفظ' : 'حفظ المشروع'}
+            {isLocalProject ? 'حفظ التغييرات' : (isSaved ? 'تم الحفظ' : 'حفظ المشروع')}
           </button>
           <button
             onClick={onGenerateCiCd}
@@ -178,13 +208,24 @@ const ProjectDisplay: React.FC<ProjectDisplayProps> = ({
             )}
             {ciCdFileExists ? 'تم الإنشاء' : 'إنشاء CI/CD'}
           </button>
-          <button
-            onClick={onDownloadZip}
-            className="flex items-center gap-2 bg-green-600 hover:bg-green-500 text-white font-bold py-2 px-4 rounded-lg transition-all shadow-md"
-          >
-            <DownloadIcon />
-            تنزيل ZIP
-          </button>
+          {showPreviewButton && (
+            <button
+              onClick={() => setIsPreviewMode(true)}
+              className="flex items-center gap-2 bg-teal-600 hover:bg-teal-500 text-white font-bold py-2 px-4 rounded-lg transition-all shadow-md"
+            >
+              <PreviewIcon />
+              معاينة مباشرة
+            </button>
+          )}
+          {!isLocalProject && (
+            <button
+              onClick={onDownloadZip}
+              className="flex items-center gap-2 bg-green-600 hover:bg-green-500 text-white font-bold py-2 px-4 rounded-lg transition-all shadow-md"
+            >
+              <DownloadIcon />
+              تنزيل ZIP
+            </button>
+          )}
         </div>
       </div>
 
@@ -214,98 +255,105 @@ const ProjectDisplay: React.FC<ProjectDisplayProps> = ({
         </div>
       </div>
       
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6" style={{ minHeight: '55vh' }}>
-        <aside className="lg:col-span-1 bg-slate-100 dark:bg-slate-900/50 rounded-lg p-3 flex flex-col">
-          <h3 className="text-lg font-semibold text-sky-600 dark:text-sky-300 mb-3 px-2">ملفات المشروع</h3>
-          <ul className="space-y-1 overflow-y-auto">
-            {files.map((file) => (
-              <li key={file.fileName}>
-                <button
-                  onClick={() => setActiveFileName(file.fileName)}
-                  className={`w-full text-right flex items-center gap-3 p-2 rounded-md transition-colors text-sm ${
-                    activeFileName === file.fileName ? 'bg-sky-200/60 text-sky-800 dark:bg-sky-800/60 dark:text-white' : 'hover:bg-slate-200/50 text-slate-700 dark:hover:bg-slate-700/50 dark:text-slate-300'
-                  }`}
-                >
-                  <FileCodeIcon />
-                  <span className="truncate">{file.fileName}</span>
-                </button>
-              </li>
-            ))}
-          </ul>
-        </aside>
-        <main className={`lg:col-span-2 grid grid-cols-1 ${showPreview ? 'xl:grid-cols-2' : 'xl:grid-cols-1'} gap-4 h-full`}>
-            <div className="bg-gray-50 dark:bg-slate-900 rounded-lg overflow-hidden flex flex-col h-full border border-slate-200 dark:border-slate-800">
-              {activeFile ? (
-                  <div className="h-full flex flex-col">
-                      <div className="flex justify-between items-center bg-slate-200 dark:bg-slate-800 p-2 border-b border-slate-300 dark:border-slate-700 flex-shrink-0">
-                          <span className="text-sm font-mono text-slate-600 dark:text-slate-400">{activeFile.fileName}</span>
-                          <button
-                              onClick={handleCopy}
-                              className="flex items-center gap-2 text-sm bg-slate-300 hover:bg-slate-400 text-slate-800 dark:bg-slate-700 dark:hover:bg-slate-600 dark:text-slate-300 py-1 px-3 rounded-md transition-colors"
-                          >
-                              {copySuccess ? <>{copySuccess}</> : <><CopyIcon /> نسخ</>}
-                          </button>
-                      </div>
-                      <div className="flex-1 flex flex-row overflow-hidden code-editor">
-                          <div
-                              ref={lineNumbersRef}
-                              className="py-4 pl-4 pr-3 font-mono text-sm text-slate-400 dark:text-slate-600 text-right select-none hide-scrollbar overflow-y-auto"
-                              aria-hidden="true"
-                          >
-                              {Array.from({ length: lineCount }, (_, i) => (
-                                  <div key={i} className="leading-relaxed h-[1.625rem]">{i + 1}</div>
-                              ))}
-                          </div>
-                          <div className="relative flex-1">
-                              <textarea
-                                ref={codeEditorRef}
-                                value={activeFile.code}
-                                onChange={(e) => onCodeChange(activeFile.fileName, e.target.value)}
-                                className="absolute inset-0 w-full h-full py-4 pr-4 pl-2 bg-transparent text-transparent caret-slate-800 dark:caret-white font-mono text-sm resize-none border-0 focus:ring-0 z-10 leading-relaxed"
-                                spellCheck="false"
-                                onScroll={(e) => {
-                                    const target = e.currentTarget;
-                                    if (preRef.current) {
-                                        preRef.current.scrollTop = target.scrollTop;
-                                        preRef.current.scrollLeft = target.scrollLeft;
-                                    }
-                                    if (lineNumbersRef.current) {
-                                        lineNumbersRef.current.scrollTop = target.scrollTop;
-                                    }
-                                }}
-                              />
-                              <pre
-                                  ref={preRef}
-                                  className="absolute inset-0 w-full h-full py-4 pr-4 pl-2 m-0 overflow-auto font-mono text-sm pointer-events-none leading-relaxed"
-                                  aria-hidden="true"
-                              >
-                                  <code className={`hljs language-${getLanguage(activeFile.fileName)}`} dangerouslySetInnerHTML={{ __html: highlightedCode }} />
-                              </pre>
-                          </div>
-                      </div>
-                  </div>
-              ) : (
-                  <div className="flex items-center justify-center h-full text-slate-500">
-                      <p>الرجاء تحديد ملف لعرض محتواه.</p>
-                  </div>
-              )}
-            </div>
-            {showPreview && (
-              <div className="bg-white dark:bg-slate-900 rounded-lg overflow-hidden flex flex-col h-full border border-slate-200 dark:border-slate-800">
-                  <div className="flex items-center gap-2 bg-slate-200 dark:bg-slate-800 p-2 border-b border-slate-300 dark:border-slate-700 flex-shrink-0">
-                      <PreviewIcon />
-                      <span className="text-sm font-semibold text-slate-600 dark:text-slate-400">معاينة مباشرة</span>
-                  </div>
-                  <iframe
-                      srcDoc={previewSrcDoc}
-                      title="Live Preview"
-                      sandbox="allow-scripts allow-same-origin"
-                      className="w-full h-full bg-white flex-1"
-                  />
+       {isPreviewMode ? (
+        <div className="relative rounded-lg border border-slate-200 dark:border-slate-800" style={{ height: '60vh' }}>
+          <div className="flex items-center justify-between bg-slate-200 dark:bg-slate-800 p-2 border-b border-slate-300 dark:border-slate-700">
+              <div className="flex items-center gap-2">
+                <PreviewIcon />
+                <span className="text-sm font-semibold text-slate-600 dark:text-slate-400">معاينة مباشرة</span>
               </div>
-            )}
-        </main>
-      </div>
+              <button onClick={() => setIsPreviewMode(false)} className="flex items-center gap-2 text-sm bg-slate-300 hover:bg-slate-400 text-slate-800 dark:bg-slate-700 dark:hover:bg-slate-600 dark:text-slate-300 py-1 px-3 rounded-md transition-colors">
+                  <BackArrowIcon />
+                  العودة للمحرر
+              </button>
+          </div>
+          <iframe
+              srcDoc={previewSrcDoc}
+              title="Live Preview"
+              sandbox="allow-scripts allow-same-origin"
+              className="w-full h-full bg-white"
+          />
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6" style={{ minHeight: '55vh' }}>
+          <aside className="lg:col-span-1 bg-slate-100 dark:bg-slate-900/50 rounded-lg p-3 flex flex-col">
+            <h3 className="text-lg font-semibold text-sky-600 dark:text-sky-300 mb-3 px-2">ملفات المشروع</h3>
+            <ul className="space-y-1 overflow-y-auto">
+              {files.map((file) => (
+                <li key={file.fileName}>
+                  <button
+                    onClick={() => setActiveFileName(file.fileName)}
+                    className={`w-full text-right flex items-center gap-3 p-2 rounded-md transition-colors text-sm ${
+                      activeFileName === file.fileName ? 'bg-sky-200/60 text-sky-800 dark:bg-sky-800/60 dark:text-white' : 'hover:bg-slate-200/50 text-slate-700 dark:hover:bg-slate-700/50 dark:text-slate-300'
+                    }`}
+                  >
+                    <FileCodeIcon />
+                    <span className="truncate">{file.fileName}</span>
+                  </button>
+                </li>
+              ))}
+            </ul>
+          </aside>
+          <main className="lg:col-span-2 grid grid-cols-1 gap-4 h-full">
+              <div className="bg-gray-50 dark:bg-slate-900 rounded-lg overflow-hidden flex flex-col h-full border border-slate-200 dark:border-slate-800">
+                {activeFile ? (
+                    <div className="h-full flex flex-col">
+                        <div className="flex justify-between items-center bg-slate-200 dark:bg-slate-800 p-2 border-b border-slate-300 dark:border-slate-700 flex-shrink-0">
+                            <span className="text-sm font-mono text-slate-600 dark:text-slate-400">{activeFile.fileName}</span>
+                            <button
+                                onClick={handleCopy}
+                                className="flex items-center gap-2 text-sm bg-slate-300 hover:bg-slate-400 text-slate-800 dark:bg-slate-700 dark:hover:bg-slate-600 dark:text-slate-300 py-1 px-3 rounded-md transition-colors"
+                            >
+                                {copySuccess ? <>{copySuccess}</> : <><CopyIcon /> نسخ</>}
+                            </button>
+                        </div>
+                        <div className="flex-1 flex flex-row overflow-hidden code-editor">
+                            <div
+                                ref={lineNumbersRef}
+                                className="py-4 pl-4 pr-3 font-mono text-sm text-slate-400 dark:text-slate-600 text-right select-none hide-scrollbar overflow-y-auto"
+                                aria-hidden="true"
+                            >
+                                {Array.from({ length: lineCount }, (_, i) => (
+                                    <div key={i} className="leading-relaxed h-[1.625rem]">{i + 1}</div>
+                                ))}
+                            </div>
+                            <div className="relative flex-1">
+                                <textarea
+                                  ref={codeEditorRef}
+                                  value={activeFile.code}
+                                  onChange={(e) => onCodeChange(activeFile.fileName, e.target.value)}
+                                  className="absolute inset-0 w-full h-full py-4 pr-4 pl-2 bg-transparent text-transparent caret-slate-800 dark:caret-white font-mono text-sm resize-none border-0 focus:ring-0 z-10 leading-relaxed"
+                                  spellCheck="false"
+                                  onScroll={(e) => {
+                                      const target = e.currentTarget;
+                                      if (preRef.current) {
+                                          preRef.current.scrollTop = target.scrollTop;
+                                          preRef.current.scrollLeft = target.scrollLeft;
+                                      }
+                                      if (lineNumbersRef.current) {
+                                          lineNumbersRef.current.scrollTop = target.scrollTop;
+                                      }
+                                  }}
+                                />
+                                <pre
+                                    ref={preRef}
+                                    className="absolute inset-0 w-full h-full py-4 pr-4 pl-2 m-0 overflow-auto font-mono text-sm pointer-events-none leading-relaxed"
+                                    aria-hidden="true"
+                                >
+                                    <code className={`hljs language-${getLanguage(activeFile.fileName)}`} dangerouslySetInnerHTML={{ __html: highlightedCode }} />
+                                </pre>
+                            </div>
+                        </div>
+                    </div>
+                ) : (
+                    <div className="flex items-center justify-center h-full text-slate-500">
+                        <p>الرجاء تحديد ملف لعرض محتواه.</p>
+                    </div>
+                )}
+              </div>
+          </main>
+        </div>
+      )}
     </div>
   );
 };

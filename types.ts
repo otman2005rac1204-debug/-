@@ -10,6 +10,7 @@ export interface CodeProject {
   files: CodeFile[];
   originalPrompt: string;
   language: string;
+  localProjectPath?: string; // Path on disk for local projects
 }
 
 export interface ApiKey {
@@ -21,4 +22,17 @@ export interface ApiKey {
 export interface ChatMessage {
   speaker: 'user' | 'ai';
   text: string;
+}
+
+// Types for the Electron IPC API exposed on the window object
+export interface FsApi {
+  openDirectory: () => Promise<string | undefined>;
+  readDirectory: (path: string) => Promise<CodeFile[]>;
+  saveFiles: (projectPath: string, files: CodeFile[]) => Promise<void>;
+}
+
+declare global {
+  interface Window {
+    fsApi: FsApi;
+  }
 }
