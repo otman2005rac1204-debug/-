@@ -1,4 +1,4 @@
-// FIX: Add a triple-slash directive to include Node.js types, resolving an error for the `process.versions` property.
+// Fix: Add a triple-slash directive to include Node.js types, resolving an error for the `process.versions` property.
 /// <reference types="node" />
 
 // preload.ts

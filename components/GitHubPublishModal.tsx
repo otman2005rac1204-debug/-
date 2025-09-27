@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { CloseIcon, GitHubIcon } from './icons';
+import { CloseIcon, GitHubIcon, CheckCircleIcon, AlertCircleIcon } from './icons';
 import { CodeProject } from '../types';
 import { useLocalStorage } from '../hooks/useLocalStorage';
 import { publishToGitHub } from '../services/githubService';
@@ -23,6 +23,8 @@ const GitHubPublishModal: React.FC<GitHubPublishModalProps> = ({ isOpen, onClose
   const [status, setStatus] = useState<PublishStatus>('idle');
   const [statusMessage, setStatusMessage] = useState('');
   const [successUrl, setSuccessUrl] = useState('');
+  const [errors, setErrors] = useState<Record<string, string>>({});
+
 
   useEffect(() => {
     if (project) {
@@ -33,14 +35,39 @@ const GitHubPublishModal: React.FC<GitHubPublishModalProps> = ({ isOpen, onClose
         setStatus('idle');
         setStatusMessage('');
         setSuccessUrl('');
+        setErrors({});
     }
   }, [project, isOpen]);
 
+  const validate = (): boolean => {
+    const newErrors: Record<string, string> = {};
+    const repoRegex = /^[a-zA-Z0-9_.-]+$/;
+    const ownerRegex = /^[a-zA-Z0-9](?:[a-zA-Z0-9]|-(?=[a-zA-Z0-9])){0,38}$/;
+
+    if (!githubToken.trim()) {
+        newErrors.token = 'الرمز مطلوب.';
+    } else if (!githubToken.startsWith('ghp_') && !githubToken.startsWith('github_pat_')) {
+        newErrors.token = 'يبدو أن الرمز غير صالح.';
+    }
+
+    if (!repoOwner.trim()) {
+        newErrors.owner = 'المالك مطلوب.';
+    } else if (!ownerRegex.test(repoOwner)) {
+        newErrors.owner = 'اسم مستخدم غير صالح.';
+    }
+
+    if (!repoName.trim()) {
+        newErrors.repo = 'اسم المستودع مطلوب.';
+    } else if (!repoRegex.test(repoName)) {
+        newErrors.repo = 'اسم مستودع غير صالح. استخدم فقط الحروف والأرقام و . - _';
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
 
   const handlePublish = async () => {
-    if (!project || !githubToken.trim() || !repoOwner.trim() || !repoName.trim()) {
-        setStatusMessage('يرجى ملء جميع الحقول المطلوبة.');
-        setStatus('error');
+    if (!project || !validate()) {
         return;
     }
 
@@ -68,6 +95,35 @@ const GitHubPublishModal: React.FC<GitHubPublishModalProps> = ({ isOpen, onClose
   };
 
   if (!isOpen) return null;
+  
+  const isButtonDisabled = status === 'loading' || !project || !githubToken.trim() || !repoOwner.trim() || !repoName.trim();
+
+  const renderStatus = () => {
+    if (status === 'success') {
+        return (
+            <div className="w-full text-center p-3 rounded-lg bg-green-50 dark:bg-green-900/40 border border-green-300 dark:border-green-600/50 text-green-800 dark:text-green-300">
+                <div className="flex items-center justify-center gap-2">
+                    <CheckCircleIcon />
+                    <span className="font-semibold">{statusMessage}</span>
+                </div>
+                <a href={successUrl} target="_blank" rel="noopener noreferrer" className="font-bold underline text-sm break-all mt-1 block hover:text-green-600 dark:hover:text-green-200">{successUrl}</a>
+            </div>
+        );
+    }
+
+    if (status === 'error') {
+        return (
+             <div className="w-full text-center p-3 rounded-lg bg-red-50 dark:bg-red-900/40 border border-red-300 dark:border-red-600/50 text-red-800 dark:text-red-300">
+                 <div className="flex items-center justify-center gap-2">
+                    <AlertCircleIcon />
+                    <span className="font-semibold">خطأ: {statusMessage}</span>
+                </div>
+             </div>
+        );
+    }
+
+    return null;
+  };
 
   return (
     <div 
@@ -95,23 +151,55 @@ const GitHubPublishModal: React.FC<GitHubPublishModalProps> = ({ isOpen, onClose
             
             <div className="flex flex-col gap-1">
                 <label htmlFor="github-token" className="text-slate-700 dark:text-slate-300 font-semibold">رمز الوصول الشخصي (PAT)</label>
-                <input id="github-token" type="password" value={githubToken} onChange={e => setGithubToken(e.target.value)} placeholder="ghp_..." className="w-full bg-slate-100 dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded-md p-2 text-slate-800 dark:text-slate-300 focus:ring-2 focus:ring-sky-500 transition-all placeholder-slate-400 dark:placeholder-slate-500" />
+                <input 
+                    id="github-token" 
+                    type="password" 
+                    value={githubToken} 
+                    onChange={e => {
+                        setGithubToken(e.target.value);
+                        if (errors.token) setErrors(p => ({...p, token: ''}));
+                    }} 
+                    placeholder="ghp_..." 
+                    className={`w-full bg-slate-100 dark:bg-slate-900 border rounded-md p-2 text-slate-800 dark:text-slate-300 focus:ring-2 transition-all placeholder-slate-400 dark:placeholder-slate-500 ${errors.token ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : 'border-slate-300 dark:border-slate-600 focus:border-sky-500 focus:ring-sky-500'}`}
+                />
+                {errors.token && <p className="text-xs text-red-500 dark:text-red-400 mt-1">{errors.token}</p>}
             </div>
             
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="flex flex-col gap-1">
                     <label htmlFor="repo-owner" className="text-slate-700 dark:text-slate-300 font-semibold">المالك (اسم المستخدم)</label>
-                    <input id="repo-owner" type="text" value={repoOwner} onChange={e => setRepoOwner(e.target.value)} placeholder="YourGitHubUsername" className="w-full bg-slate-100 dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded-md p-2 text-slate-800 dark:text-slate-300 focus:ring-2 focus:ring-sky-500 transition-all placeholder-slate-400 dark:placeholder-slate-500" />
+                    <input 
+                        id="repo-owner" 
+                        type="text" 
+                        value={repoOwner} 
+                        onChange={e => {
+                            setRepoOwner(e.target.value);
+                            if (errors.owner) setErrors(p => ({...p, owner: ''}));
+                        }} 
+                        placeholder="YourGitHubUsername" 
+                        className={`w-full bg-slate-100 dark:bg-slate-900 border rounded-md p-2 text-slate-800 dark:text-slate-300 focus:ring-2 transition-all placeholder-slate-400 dark:placeholder-slate-500 ${errors.owner ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : 'border-slate-300 dark:border-slate-600 focus:border-sky-500 focus:ring-sky-500'}`}
+                    />
+                     {errors.owner && <p className="text-xs text-red-500 dark:text-red-400 mt-1">{errors.owner}</p>}
                 </div>
                 <div className="flex flex-col gap-1">
                     <label htmlFor="repo-name" className="text-slate-700 dark:text-slate-300 font-semibold">اسم المستودع</label>
-                    <input id="repo-name" type="text" value={repoName} onChange={e => setRepoName(e.target.value)} className="w-full bg-slate-100 dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded-md p-2 text-slate-800 dark:text-slate-300 focus:ring-2 focus:ring-sky-500 transition-all" />
+                    <input 
+                        id="repo-name" 
+                        type="text" 
+                        value={repoName} 
+                        onChange={e => {
+                            setRepoName(e.target.value);
+                            if (errors.repo) setErrors(p => ({...p, repo: ''}));
+                        }}
+                        className={`w-full bg-slate-100 dark:bg-slate-900 border rounded-md p-2 text-slate-800 dark:text-slate-300 focus:ring-2 transition-all ${errors.repo ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : 'border-slate-300 dark:border-slate-600 focus:border-sky-500 focus:ring-sky-500'}`}
+                    />
+                     {errors.repo && <p className="text-xs text-red-500 dark:text-red-400 mt-1">{errors.repo}</p>}
                 </div>
             </div>
 
             <div className="flex flex-col gap-1">
                 <label htmlFor="commit-message" className="text-slate-700 dark:text-slate-300 font-semibold">رسالة الـ Commit</label>
-                <input id="commit-message" type="text" value={commitMessage} onChange={e => setCommitMessage(e.target.value)} className="w-full bg-slate-100 dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded-md p-2 text-slate-800 dark:text-slate-300 focus:ring-2 focus:ring-sky-500 transition-all" />
+                <input id="commit-message" type="text" value={commitMessage} onChange={e => setCommitMessage(e.target.value)} className="w-full bg-slate-100 dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded-md p-2 text-slate-800 dark:text-slate-300 focus:ring-2 focus:ring-sky-500 focus:border-sky-500 transition-all" />
             </div>
 
             <div className="flex items-center justify-between bg-slate-100 dark:bg-slate-900/50 p-3 rounded-lg">
@@ -133,9 +221,10 @@ const GitHubPublishModal: React.FC<GitHubPublishModalProps> = ({ isOpen, onClose
         </div>
 
         <footer className="p-4 border-t border-slate-200 dark:border-slate-700 flex-shrink-0 flex flex-col items-center gap-3">
+            {renderStatus()}
             <button
               onClick={handlePublish}
-              disabled={status === 'loading' || !project}
+              disabled={isButtonDisabled}
               className="w-full flex items-center justify-center gap-2 bg-[#24292e] hover:bg-[#343a40] dark:bg-slate-600 dark:hover:bg-slate-500 disabled:bg-slate-500 dark:disabled:bg-slate-700 disabled:cursor-not-allowed text-white font-bold py-2 px-3 rounded-lg transition-all"
             >
               {status === 'loading' ? (
@@ -143,16 +232,6 @@ const GitHubPublishModal: React.FC<GitHubPublishModalProps> = ({ isOpen, onClose
               ) : ( <GitHubIcon/> )}
                {status === 'loading' ? statusMessage : 'نشر المشروع'}
             </button>
-             {status === 'success' && (
-                <div className="text-center text-sm text-green-600 dark:text-green-400 break-all">
-                    {statusMessage} الرابط: <a href={successUrl} target="_blank" rel="noopener noreferrer" className="font-bold underline">{successUrl}</a>
-                </div>
-            )}
-            {status === 'error' && (
-                <div className="text-center text-sm text-red-600 dark:text-red-400">
-                    خطأ: {statusMessage}
-                </div>
-            )}
         </footer>
       </div>
     </div>
