@@ -2,7 +2,7 @@ import { useState, useRef, useCallback } from 'react';
 import { GoogleGenAI, LiveServerMessage, Modality, Blob } from '@google/genai';
 import { ChatMessage } from '../types';
 
-type ChatStatus = 'disconnected' | 'connecting' | 'connected' | 'error' | 'denied';
+type ChatStatus = 'disconnected' | 'connecting' | 'connected' | 'error' | 'denied' | 'invalid_key';
 
 // Audio Encoding/Decoding functions as per Gemini documentation
 function encode(bytes: Uint8Array) {
@@ -194,7 +194,9 @@ export const useVoiceChat = (apiKey: string) => {
             },
         });
     } catch (err: any) {
-        if (err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError') {
+        if (err.toString().includes('API key not valid')) {
+            setStatus('invalid_key');
+        } else if (err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError') {
             setStatus('denied');
         } else {
             console.error('Failed to start voice chat:', err);

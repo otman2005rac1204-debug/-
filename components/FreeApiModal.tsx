@@ -135,34 +135,34 @@ const FreeApiModal: React.FC<FreeApiModalProps> = ({ isOpen, onClose }) => {
       onClick={onClose}
     >
       <div 
-        className="bg-slate-800 border border-slate-700 rounded-xl shadow-2xl w-full max-w-3xl max-h-[90vh] flex flex-col"
+        className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl shadow-2xl w-full max-w-3xl max-h-[90vh] flex flex-col"
         onClick={e => e.stopPropagation()}
       >
-        <header className="flex items-center justify-between p-4 border-b border-slate-700 flex-shrink-0">
+        <header className="flex items-center justify-between p-4 border-b border-slate-200 dark:border-slate-700 flex-shrink-0">
           <div className="flex items-center gap-3">
             <ApiKeyIcon />
-            <h2 className="text-xl font-bold text-sky-300">قائمة واجهات برمجة التطبيقات المجانية (APIs)</h2>
+            <h2 className="text-xl font-bold text-sky-600 dark:text-sky-300">قائمة واجهات برمجة التطبيقات المجانية (APIs)</h2>
           </div>
-          <button onClick={onClose} className="text-slate-400 hover:text-white transition-colors">
+          <button onClick={onClose} className="text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors">
             <CloseIcon />
           </button>
         </header>
         <div className="p-6 overflow-y-auto">
-          <p className="text-slate-400 mb-6">
+          <p className="text-slate-600 dark:text-slate-400 mb-6">
             استخدم هذه الواجهات البرمجية المجانية لإضافة بيانات حقيقية إلى مشاريعك. اذكر ببساطة في طلبك أنك تريد استخدام إحدى هذه الواجهات، وسيقوم الذكاء الاصطناعي بدمجها لك!
           </p>
           
-          <h3 className="text-xl font-bold text-sky-300 mb-4 border-b border-sky-800 pb-2">واجهات برمجة تطبيقات عامة</h3>
+          <h3 className="text-xl font-bold text-sky-600 dark:text-sky-300 mb-4 border-b border-sky-200 dark:border-sky-800 pb-2">واجهات برمجة تطبيقات عامة</h3>
           <ul className="space-y-4">
             {GENERAL_APIS.map(api => (
-              <li key={api.name} className="bg-slate-900/50 p-4 rounded-lg border border-slate-700/80">
-                <h3 className="font-bold text-lg text-sky-400">{api.name}</h3>
-                <p className="text-slate-300 my-2 text-sm">{api.description}</p>
+              <li key={api.name} className="bg-slate-100 dark:bg-slate-900/50 p-4 rounded-lg border border-slate-200/80 dark:border-slate-700/80">
+                <h3 className="font-bold text-lg text-sky-600 dark:text-sky-400">{api.name}</h3>
+                <p className="text-slate-700 dark:text-slate-300 my-2 text-sm">{api.description}</p>
                 <a 
                   href={api.link}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-sm font-semibold text-indigo-400 hover:text-indigo-300 hover:underline"
+                  className="text-sm font-semibold text-indigo-600 dark:text-indigo-400 hover:text-indigo-500 dark:hover:text-indigo-300 hover:underline"
                 >
                   الوثائق &rarr;
                 </a>
@@ -170,17 +170,17 @@ const FreeApiModal: React.FC<FreeApiModalProps> = ({ isOpen, onClose }) => {
             ))}
           </ul>
 
-          <h3 className="text-xl font-bold text-sky-300 mt-8 mb-4 border-b border-sky-800 pb-2">واجهات برمجة تطبيقات التصميم والفن</h3>
+          <h3 className="text-xl font-bold text-sky-600 dark:text-sky-300 mt-8 mb-4 border-b border-sky-200 dark:border-sky-800 pb-2">واجهات برمجة تطبيقات التصميم والفن</h3>
           <ul className="space-y-4">
             {DESIGN_ART_APIS.map(api => (
-              <li key={api.name} className="bg-slate-900/50 p-4 rounded-lg border border-slate-700/80">
-                <h3 className="font-bold text-lg text-sky-400">{api.name}</h3>
-                <p className="text-slate-300 my-2 text-sm">{api.description}</p>
+              <li key={api.name} className="bg-slate-100 dark:bg-slate-900/50 p-4 rounded-lg border border-slate-200/80 dark:border-slate-700/80">
+                <h3 className="font-bold text-lg text-sky-600 dark:text-sky-400">{api.name}</h3>
+                <p className="text-slate-700 dark:text-slate-300 my-2 text-sm">{api.description}</p>
                 <a 
                   href={api.link}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-sm font-semibold text-indigo-400 hover:text-indigo-300 hover:underline"
+                  className="text-sm font-semibold text-indigo-600 dark:text-indigo-400 hover:text-indigo-500 dark:hover:text-indigo-300 hover:underline"
                 >
                   الوثائق &rarr;
                 </a>
@@ -188,17 +188,17 @@ const FreeApiModal: React.FC<FreeApiModalProps> = ({ isOpen, onClose }) => {
             ))}
           </ul>
           
-          <h3 className="text-xl font-bold text-sky-300 mt-8 mb-4 border-b border-sky-800 pb-2">واجهات برمجة تطبيقات الأنمي والمانجا</h3>
+          <h3 className="text-xl font-bold text-sky-600 dark:text-sky-300 mt-8 mb-4 border-b border-sky-200 dark:border-sky-800 pb-2">واجهات برمجة تطبيقات الأنمي والمانجا</h3>
            <ul className="space-y-4">
             {ANIME_APIS.map(api => (
-              <li key={api.name} className="bg-slate-900/50 p-4 rounded-lg border border-slate-700/80">
-                <h3 className="font-bold text-lg text-sky-400">{api.name}</h3>
-                <p className="text-slate-300 my-2 text-sm">{api.description}</p>
+              <li key={api.name} className="bg-slate-100 dark:bg-slate-900/50 p-4 rounded-lg border border-slate-200/80 dark:border-slate-700/80">
+                <h3 className="font-bold text-lg text-sky-600 dark:text-sky-400">{api.name}</h3>
+                <p className="text-slate-700 dark:text-slate-300 my-2 text-sm">{api.description}</p>
                 <a 
                   href={api.link}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-sm font-semibold text-indigo-400 hover:text-indigo-300 hover:underline"
+                  className="text-sm font-semibold text-indigo-600 dark:text-indigo-400 hover:text-indigo-500 dark:hover:text-indigo-300 hover:underline"
                 >
                   الوثائق &rarr;
                 </a>
@@ -206,17 +206,17 @@ const FreeApiModal: React.FC<FreeApiModalProps> = ({ isOpen, onClose }) => {
             ))}
           </ul>
 
-          <h3 className="text-xl font-bold text-sky-300 mt-8 mb-4 border-b border-sky-800 pb-2">واجهات برمجة تطبيقات التخزين والملفات</h3>
+          <h3 className="text-xl font-bold text-sky-600 dark:text-sky-300 mt-8 mb-4 border-b border-sky-200 dark:border-sky-800 pb-2">واجهات برمجة تطبيقات التخزين والملفات</h3>
            <ul className="space-y-4">
             {STORAGE_FILES_APIS.map(api => (
-              <li key={api.name} className="bg-slate-900/50 p-4 rounded-lg border border-slate-700/80">
-                <h3 className="font-bold text-lg text-sky-400">{api.name}</h3>
-                <p className="text-slate-300 my-2 text-sm">{api.description}</p>
+              <li key={api.name} className="bg-slate-100 dark:bg-slate-900/50 p-4 rounded-lg border border-slate-200/80 dark:border-slate-700/80">
+                <h3 className="font-bold text-lg text-sky-600 dark:text-sky-400">{api.name}</h3>
+                <p className="text-slate-700 dark:text-slate-300 my-2 text-sm">{api.description}</p>
                 <a 
                   href={api.link}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-sm font-semibold text-indigo-400 hover:text-indigo-300 hover:underline"
+                  className="text-sm font-semibold text-indigo-600 dark:text-indigo-400 hover:text-indigo-500 dark:hover:text-indigo-300 hover:underline"
                 >
                   الوثائق &rarr;
                 </a>

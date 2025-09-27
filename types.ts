@@ -22,10 +22,3 @@ export interface ChatMessage {
   speaker: 'user' | 'ai';
   text: string;
 }
-
-export interface DeveloperProfile {
-  name: string;
-  bio: string;
-  website?: string;
-  github?: string;
-}

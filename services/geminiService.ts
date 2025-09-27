@@ -153,7 +153,7 @@ Crucially, you MUST include a 'README.md' file at the root level. This file must
 If the project type ("${projectType}") is anything other than 'HTML/CSS/JS', you MUST provide a 'run.bat' file for Windows users to automate setup and execution.
 
 1.  **For Python Projects:**
-    - You MUST generate a \`requirements.txt\` file. It must include \`pytest\` for testing, in addition to any other required libraries (like 'requests' or 'flask'). If no other libraries are needed, it should still contain \`pytest\`.
+    - You MUST generate a \`requirements.txt\` file. It must include \`pytest\` for testing and \`pyinstaller\` for building executables, in addition to any other required libraries (like 'requests' or 'flask'). If no other libraries are needed, it should still contain at least \`pytest\` and \`pyinstaller\`.
     - You MUST create a \`tests\` directory with a test file (e.g., \`test_app.py\`) containing at least one meaningful \`pytest\` test case that validates the core functionality.
     - You MUST generate a \`Dockerfile\`. It must use a slim Python base image, copy files, install dependencies from \`requirements.txt\`, and set the CMD to run the main script. If it is a web application (e.g., using Flask), you MUST add an \`EXPOSE 5000\` instruction. Example:
       \`\`\`Dockerfile
@@ -199,6 +199,33 @@ If the project type ("${projectType}") is anything other than 'HTML/CSS/JS', you
 
       pause
       \`\`\`
+    - **Executable Generation:**
+      - You MUST generate a \`build.bat\` file. This script will create a standalone Windows executable. It must use PyInstaller to bundle the main Python script into a single file located in the \`dist\` directory.
+      - If the project is a command-line application, the PyInstaller command should be \`pyinstaller --onefile your_main_script.py\`.
+      - If the project has a graphical user interface (e.g., using Tkinter, PyQt), the command should be \`pyinstaller --onefile --windowed your_main_script.py\`.
+      - The \`build.bat\` script must first install dependencies from \`requirements.txt\` and then run the appropriate PyInstaller command.
+      - Example \`build.bat\` for a console app named 'app.py':
+        \`\`\`bat
+        @echo off
+        echo Installing dependencies...
+        pip install -r requirements.txt
+
+        if %errorlevel% neq 0 (
+            echo.
+            echo Failed to install dependencies. Please ensure Python and pip are installed.
+            pause
+            exit /b
+        )
+
+        echo.
+        echo Building the executable...
+        pyinstaller --onefile app.py
+
+        echo.
+        echo Build complete! The executable can be found in the 'dist' folder.
+        pause
+        \`\`\`
+      - The 'README.md' file MUST be updated with a section explaining how to run \`build.bat\` to create the executable.
 
 2.  **For Node.js, React, or Vue Projects:**
     - For single server/app projects (like Node.js or React), the \`run.bat\` should run 'npm install' and then a start command (e.g., 'npm run dev' or 'node server.js').
@@ -239,9 +266,12 @@ Do not include any markdown formatting like \`\`\`json or any other explanatory 
     }
 
     return projectData;
-  } catch (error) {
-    console.error('Error generating project code with Gemini:', error);
-    throw new Error('Failed to generate project code. Please try again.');
+  } catch (error: any) {
+    console.error('Error with Gemini API:', error);
+    if (error.toString().includes('API key not valid')) {
+        throw new Error('Invalid API Key');
+    }
+    throw new Error('Failed to communicate with the AI service. Please try again.');
   }
 };
 
@@ -301,12 +331,13 @@ Maintain the existing file structure unless the request implies a change. The pr
     - Updating API information if a new API is added or an existing one is changed. Include the API name, a link to its documentation, and clear instructions for the user.
     - Updating the "Project Breakdown" or "Features" section to reflect the changes made. If you add a new feature, add it to the list with a description. If you modify an existing feature, update its description accordingly.
 - For Python projects:
-    - If your changes require any new external libraries, you MUST update the \`requirements.txt\` file.
+    - If your changes require any new external libraries, you MUST update the \`requirements.txt\` file. Ensure it contains \`pytest\` and \`pyinstaller\`.
     - You MUST update the test cases in the \`tests\` directory to reflect the changes made to the application logic. Add new tests for new features and modify existing tests for changed features. Ensure the tests are meaningful and use the \`pytest\` framework.
     - If a \`Dockerfile\` exists, you MUST update it if the changes require it (e.g., changing the entrypoint script name, adding system-level dependencies, or exposing a new port).
     - Update the \`run.bat\` file if the project's name or exposed port changes.
+    - You MUST ensure a \`build.bat\` file exists for creating a Windows executable with PyInstaller. If the main script name changes, or if the application changes from a console app to a GUI app (or vice-versa), you MUST update the \`build.bat\` file accordingly.
 - If a \`run.bat\` file exists (for non-Python projects), update it if the refinement changes how the project is run (e.g., changing the main script name).
-- If a \`run.bat\` does not exist and the project type is not 'HTML/CSS/JS', you must generate the appropriate \`run.bat\` file as described in the initial generation instructions (handle Python vs. Node.js projects correctly).
+- If a \`run.bat\` does not exist and the project type is not 'HTML/CSS/JS', you must generate the appropriate \`run.bat\` and (for Python) \`build.bat\` files as described in the initial generation instructions.
 
 Provide your response as a single JSON object. Do not change the project name or description unless the refinement request specifically asks for it. Ensure the 'language' field is still set to "${language}". The JSON object must match this structure:
 {
@@ -341,9 +372,12 @@ Do not include any markdown formatting like \`\`\`json or any other explanatory 
 
     return projectData;
 
-  } catch (error) {
-    console.error('Error refining project code with Gemini:', error);
-    throw new Error('Failed to refine project code. Please try again.');
+  } catch (error: any) {
+    console.error('Error with Gemini API:', error);
+    if (error.toString().includes('API key not valid')) {
+        throw new Error('Invalid API Key');
+    }
+    throw new Error('Failed to communicate with the AI service. Please try again.');
   }
 };
 
@@ -406,8 +440,11 @@ Your response must be ONLY the raw YAML content for the \`ci.yml\` file. Do not 
         });
 
         return cleanYamlString(response.text);
-    } catch (error) {
-        console.error('Error generating CI/CD workflow with Gemini:', error);
-        throw new Error('Failed to generate CI/CD workflow. Please try again.');
+    } catch (error: any) {
+        console.error('Error with Gemini API:', error);
+        if (error.toString().includes('API key not valid')) {
+            throw new Error('Invalid API Key');
+        }
+        throw new Error('Failed to communicate with the AI service. Please try again.');
     }
 };

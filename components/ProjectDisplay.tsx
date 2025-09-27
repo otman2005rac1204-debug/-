@@ -104,33 +104,33 @@ const ProjectDisplay: React.FC<ProjectDisplayProps> = ({
   };
 
   const getWelcomeMessage = () => (
-    <div className="text-center p-10 bg-slate-800/50 rounded-lg">
-      <h2 className="text-2xl font-bold text-sky-400 mb-2">مرحباً بك في مولد المشاريع</h2>
-      <p className="text-slate-400">
+    <div className="text-center p-10 bg-white dark:bg-slate-800/50 rounded-lg">
+      <h2 className="text-2xl font-bold text-sky-600 dark:text-sky-400 mb-2">مرحباً بك في مولد المشاريع</h2>
+      <p className="text-slate-600 dark:text-slate-400">
         اكتب فكرة مشروعك في اللوحة الجانبية، وسيقوم الذكاء الاصطناعي بإنشاء الكود الكامل لك.
       </p>
     </div>
   );
   
   const getLoadingState = () => (
-     <div className="text-center p-10 bg-slate-800/50 rounded-lg animate-pulse">
-        <div className="h-8 bg-slate-700 rounded w-3/4 mx-auto mb-4"></div>
-        <div className="h-4 bg-slate-700 rounded w-full mx-auto mb-6"></div>
+     <div className="text-center p-10 bg-white dark:bg-slate-800/50 rounded-lg animate-pulse">
+        <div className="h-8 bg-slate-200 dark:bg-slate-700 rounded w-3/4 mx-auto mb-4"></div>
+        <div className="h-4 bg-slate-200 dark:bg-slate-700 rounded w-full mx-auto mb-6"></div>
         <div className="flex gap-4 mt-8">
             <div className="w-1/4 space-y-3">
-                <div className="h-10 bg-slate-700 rounded"></div>
-                <div className="h-10 bg-slate-700 rounded"></div>
-                <div className="h-10 bg-slate-700 rounded"></div>
+                <div className="h-10 bg-slate-200 dark:bg-slate-700 rounded"></div>
+                <div className="h-10 bg-slate-200 dark:bg-slate-700 rounded"></div>
+                <div className="h-10 bg-slate-200 dark:bg-slate-700 rounded"></div>
             </div>
-            <div className="w-3/4 h-64 bg-slate-700 rounded"></div>
+            <div className="w-3/4 h-64 bg-slate-200 dark:bg-slate-700 rounded"></div>
         </div>
     </div>
   );
   
   const getErrorState = () => (
-    <div className="text-center p-10 bg-red-900/50 border border-red-700 rounded-lg">
-        <h2 className="text-2xl font-bold text-red-400 mb-2">حدث خطأ</h2>
-        <p className="text-red-300">{error}</p>
+    <div className="text-center p-10 bg-red-50 dark:bg-red-900/50 border border-red-200 dark:border-red-700 rounded-lg">
+        <h2 className="text-2xl font-bold text-red-600 dark:text-red-400 mb-2">حدث خطأ</h2>
+        <p className="text-red-700 dark:text-red-300">{error}</p>
     </div>
   );
 
@@ -149,18 +149,18 @@ const ProjectDisplay: React.FC<ProjectDisplayProps> = ({
 
 
   return (
-    <div className="bg-slate-800/50 p-6 md:p-8 rounded-lg shadow-lg">
+    <div className="bg-white dark:bg-slate-800/50 p-6 md:p-8 rounded-lg shadow-lg">
       <style>{hideScrollbarStyle}</style>
       <div className="flex flex-wrap gap-4 justify-between items-start mb-4">
         <div>
-          <h2 className="text-3xl font-extrabold text-sky-400">{project.projectName}</h2>
-          <p className="mt-2 text-slate-400 max-w-2xl">{project.description} <span className="font-semibold text-xs bg-slate-700 text-sky-300 px-2 py-1 rounded-full ml-2">{project.language}</span></p>
+          <h2 className="text-3xl font-extrabold text-sky-600 dark:text-sky-400">{project.projectName}</h2>
+          <p className="mt-2 text-slate-600 dark:text-slate-400 max-w-2xl">{project.description} <span className="font-semibold text-xs bg-slate-200 text-sky-800 dark:bg-slate-700 dark:text-sky-300 px-2 py-1 rounded-full ml-2">{project.language}</span></p>
         </div>
         <div className="flex items-center gap-2 flex-shrink-0">
           <button
             onClick={onSave}
             disabled={isSaved}
-            className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-500 disabled:bg-slate-600 disabled:cursor-not-allowed text-white font-bold py-2 px-4 rounded-lg transition-all shadow-md"
+            className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-500 disabled:bg-slate-400 dark:disabled:bg-slate-600 disabled:cursor-not-allowed text-white font-bold py-2 px-4 rounded-lg transition-all shadow-md"
           >
             <SaveIcon />
             {isSaved ? 'تم الحفظ' : 'حفظ المشروع'}
@@ -168,7 +168,7 @@ const ProjectDisplay: React.FC<ProjectDisplayProps> = ({
           <button
             onClick={onGenerateCiCd}
             disabled={isGeneratingCiCd || ciCdFileExists}
-            className="flex items-center gap-2 bg-slate-600 hover:bg-slate-500 disabled:bg-slate-700 disabled:cursor-not-allowed text-white font-bold py-2 px-4 rounded-lg transition-all shadow-md"
+            className="flex items-center gap-2 bg-slate-500 hover:bg-slate-600 dark:bg-slate-600 dark:hover:bg-slate-500 disabled:bg-slate-400 dark:disabled:bg-slate-700 disabled:cursor-not-allowed text-white font-bold py-2 px-4 rounded-lg transition-all shadow-md"
             title={ciCdFileExists ? 'ملف CI/CD موجود بالفعل' : 'إنشاء سير عمل GitHub Actions'}
           >
             {isGeneratingCiCd ? (
@@ -188,8 +188,8 @@ const ProjectDisplay: React.FC<ProjectDisplayProps> = ({
         </div>
       </div>
 
-      <div className="mb-6 bg-slate-900/50 p-4 rounded-lg border border-slate-700">
-        <label htmlFor="refine-project" className="block text-md font-semibold mb-2 text-indigo-300 flex items-center gap-2">
+      <div className="mb-6 bg-slate-100/50 dark:bg-slate-900/50 p-4 rounded-lg border border-slate-200 dark:border-slate-700">
+        <label htmlFor="refine-project" className="block text-md font-semibold mb-2 text-indigo-600 dark:text-indigo-300 flex items-center gap-2">
           <RefineIcon/>
           تحسين المشروع
         </label>
@@ -197,7 +197,7 @@ const ProjectDisplay: React.FC<ProjectDisplayProps> = ({
           <input
             id="refine-project"
             type="text"
-            className="flex-grow bg-slate-900 border border-slate-600 rounded-md p-2 text-slate-300 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all placeholder-slate-500"
+            className="flex-grow bg-slate-100 dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded-md p-2 text-slate-900 dark:text-slate-300 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all placeholder-slate-500"
             placeholder="مثال: اجعل الألوان داكنة أكثر"
             value={refinementInput}
             onChange={(e) => setRefinementInput(e.target.value)}
@@ -207,7 +207,7 @@ const ProjectDisplay: React.FC<ProjectDisplayProps> = ({
           <button
             onClick={onRefine}
             disabled={isRefining || !refinementInput.trim()}
-            className="w-32 flex items-center justify-center gap-2 bg-indigo-600 hover:bg-indigo-500 disabled:bg-slate-600 disabled:cursor-not-allowed text-white font-bold py-2 px-4 rounded-lg transition-all"
+            className="w-32 flex items-center justify-center gap-2 bg-indigo-600 hover:bg-indigo-500 disabled:bg-slate-400 dark:disabled:bg-slate-600 disabled:cursor-not-allowed text-white font-bold py-2 px-4 rounded-lg transition-all"
           >
             {isRefining ? <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> : 'تحسين'}
           </button>
@@ -215,15 +215,15 @@ const ProjectDisplay: React.FC<ProjectDisplayProps> = ({
       </div>
       
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6" style={{ minHeight: '55vh' }}>
-        <aside className="lg:col-span-1 bg-slate-900/50 rounded-lg p-3 flex flex-col">
-          <h3 className="text-lg font-semibold text-sky-300 mb-3 px-2">ملفات المشروع</h3>
+        <aside className="lg:col-span-1 bg-slate-100 dark:bg-slate-900/50 rounded-lg p-3 flex flex-col">
+          <h3 className="text-lg font-semibold text-sky-600 dark:text-sky-300 mb-3 px-2">ملفات المشروع</h3>
           <ul className="space-y-1 overflow-y-auto">
             {files.map((file) => (
               <li key={file.fileName}>
                 <button
                   onClick={() => setActiveFileName(file.fileName)}
                   className={`w-full text-right flex items-center gap-3 p-2 rounded-md transition-colors text-sm ${
-                    activeFileName === file.fileName ? 'bg-sky-800/60 text-white' : 'hover:bg-slate-700/50 text-slate-300'
+                    activeFileName === file.fileName ? 'bg-sky-200/60 text-sky-800 dark:bg-sky-800/60 dark:text-white' : 'hover:bg-slate-200/50 text-slate-700 dark:hover:bg-slate-700/50 dark:text-slate-300'
                   }`}
                 >
                   <FileCodeIcon />
@@ -234,14 +234,14 @@ const ProjectDisplay: React.FC<ProjectDisplayProps> = ({
           </ul>
         </aside>
         <main className={`lg:col-span-2 grid grid-cols-1 ${showPreview ? 'xl:grid-cols-2' : 'xl:grid-cols-1'} gap-4 h-full`}>
-            <div className="bg-slate-900 rounded-lg overflow-hidden flex flex-col h-full">
+            <div className="bg-gray-50 dark:bg-slate-900 rounded-lg overflow-hidden flex flex-col h-full border border-slate-200 dark:border-slate-800">
               {activeFile ? (
                   <div className="h-full flex flex-col">
-                      <div className="flex justify-between items-center bg-slate-800 p-2 border-b border-slate-700 flex-shrink-0">
-                          <span className="text-sm font-mono text-slate-400">{activeFile.fileName}</span>
+                      <div className="flex justify-between items-center bg-slate-200 dark:bg-slate-800 p-2 border-b border-slate-300 dark:border-slate-700 flex-shrink-0">
+                          <span className="text-sm font-mono text-slate-600 dark:text-slate-400">{activeFile.fileName}</span>
                           <button
                               onClick={handleCopy}
-                              className="flex items-center gap-2 text-sm bg-slate-700 hover:bg-slate-600 text-slate-300 py-1 px-3 rounded-md transition-colors"
+                              className="flex items-center gap-2 text-sm bg-slate-300 hover:bg-slate-400 text-slate-800 dark:bg-slate-700 dark:hover:bg-slate-600 dark:text-slate-300 py-1 px-3 rounded-md transition-colors"
                           >
                               {copySuccess ? <>{copySuccess}</> : <><CopyIcon /> نسخ</>}
                           </button>
@@ -249,7 +249,7 @@ const ProjectDisplay: React.FC<ProjectDisplayProps> = ({
                       <div className="flex-1 flex flex-row overflow-hidden code-editor">
                           <div
                               ref={lineNumbersRef}
-                              className="py-4 pl-4 pr-3 font-mono text-sm text-slate-600 text-right select-none hide-scrollbar overflow-y-auto"
+                              className="py-4 pl-4 pr-3 font-mono text-sm text-slate-400 dark:text-slate-600 text-right select-none hide-scrollbar overflow-y-auto"
                               aria-hidden="true"
                           >
                               {Array.from({ length: lineCount }, (_, i) => (
@@ -261,7 +261,7 @@ const ProjectDisplay: React.FC<ProjectDisplayProps> = ({
                                 ref={codeEditorRef}
                                 value={activeFile.code}
                                 onChange={(e) => onCodeChange(activeFile.fileName, e.target.value)}
-                                className="absolute inset-0 w-full h-full py-4 pr-4 pl-2 bg-transparent text-transparent caret-white font-mono text-sm resize-none border-0 focus:ring-0 z-10 leading-relaxed"
+                                className="absolute inset-0 w-full h-full py-4 pr-4 pl-2 bg-transparent text-transparent caret-slate-800 dark:caret-white font-mono text-sm resize-none border-0 focus:ring-0 z-10 leading-relaxed"
                                 spellCheck="false"
                                 onScroll={(e) => {
                                     const target = e.currentTarget;
@@ -276,10 +276,10 @@ const ProjectDisplay: React.FC<ProjectDisplayProps> = ({
                               />
                               <pre
                                   ref={preRef}
-                                  className="absolute inset-0 w-full h-full py-4 pr-4 pl-2 m-0 overflow-auto font-mono text-sm pointer-events-none text-slate-300 leading-relaxed"
+                                  className="absolute inset-0 w-full h-full py-4 pr-4 pl-2 m-0 overflow-auto font-mono text-sm pointer-events-none leading-relaxed"
                                   aria-hidden="true"
                               >
-                                  <code className={`language-${getLanguage(activeFile.fileName)}`} dangerouslySetInnerHTML={{ __html: highlightedCode }} />
+                                  <code className={`hljs language-${getLanguage(activeFile.fileName)}`} dangerouslySetInnerHTML={{ __html: highlightedCode }} />
                               </pre>
                           </div>
                       </div>
@@ -291,10 +291,10 @@ const ProjectDisplay: React.FC<ProjectDisplayProps> = ({
               )}
             </div>
             {showPreview && (
-              <div className="bg-slate-900 rounded-lg overflow-hidden flex flex-col h-full">
-                  <div className="flex items-center gap-2 bg-slate-800 p-2 border-b border-slate-700 flex-shrink-0">
+              <div className="bg-white dark:bg-slate-900 rounded-lg overflow-hidden flex flex-col h-full border border-slate-200 dark:border-slate-800">
+                  <div className="flex items-center gap-2 bg-slate-200 dark:bg-slate-800 p-2 border-b border-slate-300 dark:border-slate-700 flex-shrink-0">
                       <PreviewIcon />
-                      <span className="text-sm font-semibold text-slate-400">معاينة مباشرة</span>
+                      <span className="text-sm font-semibold text-slate-600 dark:text-slate-400">معاينة مباشرة</span>
                   </div>
                   <iframe
                       srcDoc={previewSrcDoc}

@@ -4,10 +4,11 @@ import { generateProjectCode, refineProjectCode, generateCiCdWorkflow } from './
 import { useLocalStorage } from './hooks/useLocalStorage';
 import ProjectInputPanel from './components/ProjectInputPanel';
 import ProjectDisplay from './components/ProjectDisplay';
-import { HeaderIcon, ApiKeyIcon, KeyIcon, TrashIcon, PlusIcon, MicrophoneIcon, IdIcon } from './components/icons';
+import { HeaderIcon, ApiKeyIcon, KeyIcon, TrashIcon, PlusIcon, MicrophoneIcon, UploadIcon } from './components/icons';
 import FreeApiModal from './components/FreeApiModal';
 import VoiceChatModal from './components/VoiceChatModal';
-import DeveloperProfileModal from './components/DeveloperProfileModal';
+import PublishProjectModal from './components/DeveloperProfileModal';
+import ThemeToggle from './components/ThemeToggle';
 
 
 declare var JSZip: any;
@@ -31,7 +32,8 @@ const App: React.FC = () => {
   const [apiKeyError, setApiKeyError] = useState<string | null>(null);
   const [isGeneratingCiCd, setIsGeneratingCiCd] = useState<boolean>(false);
   const [isVoiceChatOpen, setIsVoiceChatOpen] = useState<boolean>(false);
-  const [isProfileModalOpen, setIsProfileModalOpen] = useState<boolean>(false);
+  const [isPublishModalOpen, setIsPublishModalOpen] = useState<boolean>(false);
+  const [isCurrentApiKeyInvalid, setIsCurrentApiKeyInvalid] = useState<boolean>(false);
   
   const apiKeyManagerRef = useRef<HTMLDivElement>(null);
 
@@ -64,13 +66,20 @@ const App: React.FC = () => {
     setError(null);
     setCurrentProject(null);
     setRefinementInput('');
+    setIsCurrentApiKeyInvalid(false);
 
     try {
       const projectCode = await generateProjectCode(userInput, projectType, activeApiKey.key);
       setCurrentProject({ ...projectCode, id: Date.now().toString(), originalPrompt: userInput });
-    } catch (e) {
+    } catch (e: any) {
       console.error(e);
-      setError('حدث خطأ أثناء إنشاء كود المشروع. قد يكون مفتاح API غير صالح أو أن الخدمة تواجه مشاكل.');
+      if (e.message === 'Invalid API Key') {
+        setError('فشل الإنشاء بسبب مفتاح API غير صالح. يرجى تحديثه في مدير مفاتيح API.');
+        setIsApiKeyManagerOpen(true);
+        setIsCurrentApiKeyInvalid(true);
+      } else {
+        setError('حدث خطأ أثناء إنشاء كود المشروع. قد تكون الخدمة تواجه مشاكل حاليًا.');
+      }
     } finally {
       setIsLoading(false);
     }
@@ -121,6 +130,7 @@ const App: React.FC = () => {
 
     setIsRefining(true);
     setError(null);
+    setIsCurrentApiKeyInvalid(false);
 
     try {
         const { id, originalPrompt, ...projectData } = currentProject;
@@ -128,9 +138,15 @@ const App: React.FC = () => {
         
         setCurrentProject({ ...currentProject, ...refinedProjectCode });
 
-    } catch (e) {
+    } catch (e: any) {
         console.error(e);
-        setError('حدث خطأ أثناء تحسين المشروع. قد يكون مفتاح API غير صالح أو أن الخدمة تواجه مشاكل.');
+        if (e.message === 'Invalid API Key') {
+            setError('فشل التحسين بسبب مفتاح API غير صالح. يرجى تحديثه في مدير مفاتيح API.');
+            setIsApiKeyManagerOpen(true);
+            setIsCurrentApiKeyInvalid(true);
+        } else {
+            setError('حدث خطأ أثناء تحسين المشروع. قد تكون الخدمة تواجه مشاكل حاليًا.');
+        }
     } finally {
         setIsRefining(false);
         setRefinementInput('');
@@ -167,6 +183,7 @@ const App: React.FC = () => {
     }
 
     setApiKeyError(null);
+    setIsCurrentApiKeyInvalid(false);
     const newKey: ApiKey = {
         id: Date.now().toString(),
         name: newApiKeyName,
@@ -201,6 +218,7 @@ const App: React.FC = () => {
 
     setIsGeneratingCiCd(true);
     setError(null);
+    setIsCurrentApiKeyInvalid(false);
 
     try {
         const workflowCode = await generateCiCdWorkflow(currentProject, activeApiKey.key);
@@ -217,9 +235,15 @@ const App: React.FC = () => {
             };
         });
 
-    } catch (e) {
+    } catch (e: any) {
         console.error(e);
-        setError('An error occurred while generating the CI/CD workflow.');
+         if (e.message === 'Invalid API Key') {
+            setError('فشل إنشاء CI/CD بسبب مفتاح API غير صالح. يرجى تحديثه في مدير مفاتيح API.');
+            setIsApiKeyManagerOpen(true);
+            setIsCurrentApiKeyInvalid(true);
+        } else {
+            setError('An error occurred while generating the CI/CD workflow.');
+        }
     } finally {
         setIsGeneratingCiCd(false);
     }
@@ -235,67 +259,82 @@ const App: React.FC = () => {
   }
   
   return (
-    <div className="min-h-screen bg-slate-900 text-slate-200 font-sans">
-      <header className="bg-slate-900/70 backdrop-blur-lg border-b border-slate-700 p-4 sticky top-0 z-20">
+    <div className="min-h-screen bg-slate-100 dark:bg-slate-900 text-slate-800 dark:text-slate-200 font-sans">
+      <header className="bg-white/80 dark:bg-slate-900/70 backdrop-blur-lg border-b border-slate-200 dark:border-slate-700 p-4 sticky top-0 z-20">
         <div className="container mx-auto flex items-center justify-between">
             <div className="flex items-center gap-3">
               <HeaderIcon />
-              <h1 className="text-2xl font-bold text-sky-400">مولد المشاريع بالذكاء الاصطناعي</h1>
+              <h1 className="text-2xl font-bold text-sky-600 dark:text-sky-400">مولد المشاريع بالذكاء الاصطناعي</h1>
             </div>
             <div className="flex items-center gap-2">
+                <ThemeToggle />
                 <button 
                   onClick={handleOpenVoiceChat}
-                  className="flex items-center gap-2 text-sm bg-indigo-600/50 hover:bg-indigo-600 border border-indigo-500/80 text-indigo-200 font-semibold py-2 px-4 rounded-lg transition-colors"
+                  className="flex items-center gap-2 text-sm bg-indigo-500 hover:bg-indigo-600 border border-indigo-500/80 text-white dark:bg-indigo-600/50 dark:hover:bg-indigo-600 dark:text-indigo-200 font-semibold py-2 px-4 rounded-lg transition-colors"
                   title="تحدث مع مساعد الذكاء الاصطناعي"
                 >
                   <MicrophoneIcon />
-                  <span>مساعد AI</span>
+                  <span className="hidden sm:inline">مساعد AI</span>
                 </button>
                 <button 
-                  onClick={() => setIsProfileModalOpen(true)}
-                  className="flex items-center gap-2 text-sm bg-slate-700/50 hover:bg-slate-700 border border-slate-600/80 text-sky-300 font-semibold py-2 px-4 rounded-lg transition-colors"
-                  title="حفظ ملف المطور"
+                  onClick={() => setIsPublishModalOpen(true)}
+                  disabled={!currentProject}
+                  className="flex items-center gap-2 text-sm bg-slate-200 hover:bg-slate-300 border border-slate-300/80 text-slate-700 dark:bg-slate-700/50 dark:hover:bg-slate-700 dark:border-slate-600/80 dark:text-sky-300 font-semibold py-2 px-4 rounded-lg transition-colors disabled:bg-slate-200 dark:disabled:bg-slate-800 disabled:border-slate-300 dark:disabled:border-slate-700 disabled:text-slate-500 dark:disabled:text-slate-500 disabled:cursor-not-allowed"
+                  title={!currentProject ? "قم بإنشاء مشروع أولاً" : "نشر المشروع على GoFile"}
                 >
-                  <IdIcon />
-                  <span>ملف المطور</span>
+                  <UploadIcon />
+                  <span className="hidden sm:inline">نشر المشروع</span>
                 </button>
                <button 
                   onClick={() => setIsApiModalOpen(true)}
-                  className="flex items-center gap-2 text-sm bg-slate-700/50 hover:bg-slate-700 border border-slate-600/80 text-sky-300 font-semibold py-2 px-4 rounded-lg transition-colors"
+                  className="flex items-center gap-2 text-sm bg-slate-200 hover:bg-slate-300 border border-slate-300/80 text-slate-700 dark:bg-slate-700/50 dark:hover:bg-slate-700 dark:border-slate-600/80 dark:text-sky-300 font-semibold py-2 px-4 rounded-lg transition-colors"
                 >
                   <ApiKeyIcon />
-                  <span>APIs مجانية</span>
+                  <span className="hidden md:inline">APIs مجانية</span>
                 </button>
                 <div className="relative" ref={apiKeyManagerRef}>
                     <button 
                         onClick={() => setIsApiKeyManagerOpen(!isApiKeyManagerOpen)}
-                        className={`flex items-center gap-2 text-sm border font-semibold py-2 px-4 rounded-lg transition-colors ${activeApiKey ? 'bg-green-600/20 hover:bg-green-600/30 border-green-600/80 text-green-300' : 'bg-amber-600/20 hover:bg-amber-600/30 border-amber-600/80 text-amber-300'}`}
+                        className={`flex items-center gap-2 text-sm border font-semibold py-2 px-4 rounded-lg transition-colors ${activeApiKey ? 'bg-green-100 hover:bg-green-200 border-green-500/80 text-green-700 dark:bg-green-600/20 dark:hover:bg-green-600/30 dark:border-green-600/80 dark:text-green-300' : 'bg-amber-100 hover:bg-amber-200 border-amber-500/80 text-amber-700 dark:bg-amber-600/20 dark:hover:bg-amber-600/30 dark:border-amber-600/80 dark:text-amber-300'}`}
                     >
                         <KeyIcon />
-                        <span>مفتاح API</span>
+                        <span className="hidden md:inline">مفتاح API</span>
                     </button>
                     {isApiKeyManagerOpen && (
-                        <div className="absolute top-full right-0 mt-2 w-96 bg-slate-800 border border-slate-700 rounded-lg shadow-lg p-4 z-30 flex flex-col gap-4">
-                            <h3 className="text-lg font-semibold text-sky-300">إدارة مفاتيح API</h3>
+                        <div className="absolute top-full right-0 mt-2 w-96 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg shadow-lg p-4 z-30 flex flex-col gap-4">
+                            <h3 className="text-lg font-semibold text-sky-600 dark:text-sky-300">إدارة مفاتيح API</h3>
                             
+                            {isCurrentApiKeyInvalid && (
+                                <div className="bg-red-50 dark:bg-red-900/40 border border-red-300 dark:border-red-600/50 text-red-800 dark:text-red-300 px-3 py-2 rounded-lg text-sm">
+                                    <p className="font-bold mb-1">مفتاح API النشط غير صالح</p>
+                                    <p className="mb-2">يرجى تحديد مفتاح مختلف، أو إضافة واحد جديد. يتم حفظ المفاتيح في متصفحك فقط.</p>
+                                    <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener noreferrer" className="font-semibold text-red-700 dark:text-red-200 underline hover:no-underline">
+                                        الحصول على مفتاح Gemini API جديد &rarr;
+                                    </a>
+                                </div>
+                            )}
+
                             <div className="flex flex-col gap-2 max-h-48 overflow-y-auto pr-2">
                                 {apiKeys.length > 0 ? apiKeys.map(key => (
-                                    <div key={key.id} className="flex items-center justify-between p-2 rounded-md bg-slate-900/50 hover:bg-slate-700/50 transition-colors">
+                                    <div key={key.id} className="flex items-center justify-between p-2 rounded-md bg-slate-100/50 dark:bg-slate-900/50 hover:bg-slate-200/50 dark:hover:bg-slate-700/50 transition-colors">
                                         <label htmlFor={`key-${key.id}`} className="flex items-center gap-3 cursor-pointer flex-1 truncate">
                                             <input
                                                 type="radio"
                                                 id={`key-${key.id}`}
                                                 name="api-key-selection"
                                                 checked={activeApiKeyId === key.id}
-                                                onChange={() => setActiveApiKeyId(key.id)}
-                                                className="h-4 w-4 text-sky-500 bg-slate-700 border-slate-600 focus:ring-sky-500"
+                                                onChange={() => {
+                                                  setActiveApiKeyId(key.id);
+                                                  setIsCurrentApiKeyInvalid(false);
+                                                }}
+                                                className="h-4 w-4 text-sky-600 bg-slate-200 border-slate-400 focus:ring-sky-600 dark:text-sky-500 dark:bg-slate-700 dark:border-slate-600 dark:focus:ring-sky-500"
                                             />
                                             <div className="truncate">
-                                                <span className="font-semibold text-slate-200 block truncate">{key.name}</span>
+                                                <span className="font-semibold text-slate-800 dark:text-slate-200 block truncate">{key.name}</span>
                                                 <span className="text-xs text-slate-500 font-mono block truncate">{`••••••••${key.key.slice(-4)}`}</span>
                                             </div>
                                         </label>
-                                        <button onClick={() => handleDeleteApiKey(key.id)} className="p-1 text-slate-400 hover:text-red-400 rounded-full transition-colors flex-shrink-0" aria-label={`Delete key ${key.name}`}>
+                                        <button onClick={() => handleDeleteApiKey(key.id)} className="p-1 text-slate-500 dark:text-slate-400 hover:text-red-500 dark:hover:text-red-400 rounded-full transition-colors flex-shrink-0" aria-label={`Delete key ${key.name}`}>
                                             <TrashIcon />
                                         </button>
                                     </div>
@@ -304,16 +343,16 @@ const App: React.FC = () => {
                                 )}
                             </div>
                             
-                            <hr className="border-slate-700" />
+                            <hr className="border-slate-200 dark:border-slate-700" />
 
                             <div className="flex flex-col gap-3">
-                                <h4 className="font-semibold text-sky-300">إضافة مفتاح جديد</h4>
+                                <h4 className="font-semibold text-sky-600 dark:text-sky-300">إضافة مفتاح جديد</h4>
                                  <input
                                     type="text"
                                     value={newApiKeyName}
                                     onChange={(e) => setNewApiKeyName(e.target.value)}
                                     placeholder="اسم المفتاح (مثال: مفتاح العمل)"
-                                    className="w-full bg-slate-900 border border-slate-600 rounded-md p-2 text-slate-300 focus:ring-2 focus:ring-sky-500 focus:border-sky-500 transition-all placeholder-slate-500"
+                                    className="w-full bg-slate-100 dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded-md p-2 text-slate-800 dark:text-slate-300 focus:ring-2 focus:ring-sky-500 focus:border-sky-500 transition-all placeholder-slate-400 dark:placeholder-slate-500"
                                 />
                                 <div className="flex flex-col">
                                     <input
@@ -322,12 +361,13 @@ const App: React.FC = () => {
                                         onChange={(e) => {
                                             setNewApiKeyInput(e.target.value);
                                             if (apiKeyError) setApiKeyError(null);
+                                            setIsCurrentApiKeyInvalid(false);
                                         }}
                                         onKeyDown={(e) => e.key === 'Enter' && handleAddApiKey()}
                                         placeholder="قيمة المفتاح (مثال: AIza...)"
-                                        className={`w-full bg-slate-900 border rounded-md p-2 text-slate-300 focus:ring-2 focus:ring-sky-500 focus:border-sky-500 transition-all placeholder-slate-500 ${apiKeyError ? 'border-red-500' : 'border-slate-600'}`}
+                                        className={`w-full bg-slate-100 dark:bg-slate-900 border rounded-md p-2 text-slate-800 dark:text-slate-300 focus:ring-2 focus:ring-sky-500 focus:border-sky-500 transition-all placeholder-slate-400 dark:placeholder-slate-500 ${apiKeyError ? 'border-red-500' : 'border-slate-300 dark:border-slate-600'}`}
                                     />
-                                    {apiKeyError && <p className="text-xs text-red-400 mt-1">{apiKeyError}</p>}
+                                    {apiKeyError && <p className="text-xs text-red-500 dark:text-red-400 mt-1">{apiKeyError}</p>}
                                 </div>
                                  <button
                                     onClick={handleAddApiKey}
@@ -382,12 +422,12 @@ const App: React.FC = () => {
           </div>
         </div>
       </main>
-      <footer className="text-center p-4 text-slate-500 text-sm border-t border-slate-800 mt-8">
+      <footer className="text-center p-4 text-slate-500 text-sm border-t border-slate-200 dark:border-slate-800 mt-8">
         <p>تم التطوير بواسطة مهندس React خبير وواجهات Gemini API</p>
       </footer>
       <FreeApiModal isOpen={isApiModalOpen} onClose={() => setIsApiModalOpen(false)} />
       {activeApiKey && <VoiceChatModal isOpen={isVoiceChatOpen} onClose={() => setIsVoiceChatOpen(false)} apiKey={activeApiKey.key} />}
-      <DeveloperProfileModal isOpen={isProfileModalOpen} onClose={() => setIsProfileModalOpen(false)} />
+      <PublishProjectModal isOpen={isPublishModalOpen} onClose={() => setIsPublishModalOpen(false)} project={currentProject} />
     </div>
   );
 };
